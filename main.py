@@ -1,127 +1,52 @@
 from selenium import webdriver
-
 from selenium.webdriver.common.keys import Keys
-
-from selenium.common.exceptions import NoSuchElementException
-
 import time
 
+PROMISED_DOWN = 150
+PROMISED_UP = 10
+CHROME_DRIVER_PATH = YOUR CHROME DRIVER PATH
+TWITTER_EMAIL = YOUR TWITTER EMAIL
+TWITTER_PASSWORD = YOUR TWITTER PASSWORD
 
 
-ACCOUNT_EMAIL = YOUR LOGIN EMAIL
+class InternetSpeedTwitterBot:
+    def __init__(self, driver_path):
+        self.driver = webdriver.Chrome(executable_path=driver_path)
+        self.up = 0
+        self.down = 0
 
-ACCOUNT_PASSWORD = YOUR LOGIN PASSWORD
+    def get_internet_speed(self):
+        self.driver.get("https://www.speedtest.net/")
+        # accept_button = self.driver.find_element_by_id("_evidon-banner-acceptbutton")
+        # accept_button.click()
+        # time.sleep(3)
 
-PHONE = YOUR PHONE NUMBER
+        go_button = self.driver.find_element_by_css_selector(".start-button a")
+        go_button.click()
+        time.sleep(60)
+        self.up = self.driver.find_element_by_xpath('//*[@id="container"]/div/div[3]/div/div/div/div[2]/div[3]/div[3]/div/div[3]/div/div/div[2]/div[1]/div[2]/div/div[2]/span').text
+        self.down = self.driver.find_element_by_xpath('//*[@id="container"]/div/div[3]/div/div/div/div[2]/div[3]/div[3]/div/div[3]/div/div/div[2]/div[1]/div[3]/div/div[2]/span').text
 
-
-
-chrome_driver_path = YOUR CHROME DRIVER PATH
-
-driver = webdriver.Chrome(chrome_driver_path)
-
-driver.get("https://www.linkedin.com/jobs/search/?f_LF=f_AL&geoId=102257491&keywords=marketing%20intern&location=London%2C%20England%2C%20United%20Kingdom&redirect=false&position=1&pageNum=0")
-
-
-
-time.sleep(2)
-
-sign_in_button = driver.find_element_by_link_text("Sign in")
-
-sign_in_button.click()
-
-
-
-time.sleep(5)
-
-email_field = driver.find_element_by_id("username")
-
-email_field.send_keys(ACCOUNT_EMAIL)
-
-password_field = driver.find_element_by_id("password")
-
-password_field.send_keys(ACCOUNT_PASSWORD)
-
-password_field.send_keys(Keys.ENTER)
-
-
-
-time.sleep(5)
-
-
-
-all_listings = driver.find_elements_by_css_selector(".job-card-container--clickable")
-
-
-
-for listing in all_listings:
-
-    print("called")
-
-    listing.click()
-
-    time.sleep(2)
-
-    try:
-
-        apply_button = driver.find_element_by_css_selector(".jobs-s-apply button")
-
-        apply_button.click()
-
-
-
-        time.sleep(5)
-
-        phone = driver.find_element_by_class_name("fb-single-line-text__input")
-
-        if phone.text == "":
-
-            phone.send_keys(PHONE)
-
-        
-
-        submit_button = driver.find_element_by_css_selector("footer button")
-
-        if submit_button.get_attribute("data-control-name") == "continue_unify":
-
-            close_button = driver.find_element_by_class_name("artdeco-modal__dismiss")
-
-            close_button.click()
-
-            
-
-            time.sleep(2)
-
-            discard_button = driver.find_elements_by_class_name("artdeco-modal__confirm-dialog-btn")[1]
-
-            discard_button.click()
-
-            print("Complex application, skipped.")
-
-            continue
-
-        else:
-
-            submit_button.click()
-
-
-
+    def tweet_at_provider(self):
+        self.driver.get("https://twitter.com/login")
         time.sleep(2)
+        email = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div[1]/form/div/div[1]/label/div/div[2]/div/input')
+        password = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div[1]/form/div/div[2]/label/div/div[2]/div/input')
+        email.send_keys(TWITTER_EMAIL)
+        password.send_keys(TWITTER_PASSWORD)
+        time.sleep(2)
+        password.send_keys(Keys.ENTER)
+        time.sleep(5)
+        tweet_compose = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div/div/div[2]/div/div[2]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div/div/div/div/div/div/div[1]/div/div/div/div[2]/div/div/div/div')
+        tweet = f"Hey Internet Provider, why is my internet speed {self.down}down/{self.up}up when I pay for {PROMISED_DOWN}down/{PROMISED_UP}up?"
+        tweet_compose.send_keys(tweet)
+        time.sleep(3)
+        tweet_button = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div/div/div[2]/div/div[2]/div[1]/div/div/div/div[2]/div[4]/div/div/div[2]/div[3]')
+        tweet_button.click()
+        time.sleep(2)
+        self.driver.quit()
 
-        close_button = driver.find_element_by_class_name("artdeco-modal__dismiss")
 
-        close_button.click()
-
-
-
-    except NoSuchElementException:
-
-        print("No application button, skipped.")
-
-        continue
-
-
-
-time.sleep(5)
-
-driver.quit()
+bot = InternetSpeedTwitterBot(CHROME_DRIVER_PATH)
+bot.get_internet_speed()
+bot.tweet_at_provider()
